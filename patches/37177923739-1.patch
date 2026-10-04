@@ -1,0 +1,80 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 1db8ae8..66a4e21 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -6,6 +6,11 @@ and this project uses [Semantic Versioning](https://semver.org/).
+ 
+ ## [Unreleased]
+ 
++### Fixed
++
++- The parser accepts `export` followed by any whitespace (a tab or several spaces), not just a
++  single space. A key literally named `export` (`export=1`) still parses as a plain entry.
++
+ ## [0.1.0] - 2026-10-03
+ 
+ ### Added
+diff --git a/src/envguard/core/parser.py b/src/envguard/core/parser.py
+index 781b5e3..ce312d1 100644
+--- a/src/envguard/core/parser.py
++++ b/src/envguard/core/parser.py
+@@ -17,7 +17,8 @@ import re
+ from envguard.core.models import Entry, ParseError, ParseResult
+ 
+ KEY_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+-_EXPORT_PREFIX = "export "
++# ``export`` plus any whitespace, unless what follows is ``=`` (a key named ``export``).
++_EXPORT_PREFIX_RE = re.compile(r"^export\s+(?=[^=\s])")
+ _DOUBLE_QUOTE_ESCAPES = {'"': '"', "\\": "\\", "n": "\n"}
+ 
+ 
+@@ -41,9 +42,10 @@ def parse(text: str) -> ParseResult:
+ 
+ def _parse_line(line: str, line_no: int) -> Entry:
+     exported = False
+-    if line.startswith(_EXPORT_PREFIX):
++    prefix = _EXPORT_PREFIX_RE.match(line)
++    if prefix:
+         exported = True
+-        line = line[len(_EXPORT_PREFIX) :].lstrip()
++        line = line[prefix.end() :]
+ 
+     key, sep, rest = line.partition("=")
+     if not sep:
+diff --git a/tests/test_parser.py b/tests/test_parser.py
+index 057f1d4..df5f684 100644
+--- a/tests/test_parser.py
++++ b/tests/test_parser.py
+@@ -27,6 +27,32 @@ def test_export_prefix():
+     assert entry.exported is True
+ 
+ 
++def test_export_prefix_followed_by_tab():
++    entry = only_entry("export\tKEY=value")
++    assert (entry.key, entry.value, entry.exported) == ("KEY", "value", True)
++
++
++def test_export_prefix_followed_by_several_spaces():
++    entry = only_entry("export    KEY=value")
++    assert (entry.key, entry.value, entry.exported) == ("KEY", "value", True)
++
++
++def test_key_named_export_is_not_a_prefix():
++    entry = only_entry("export=1")
++    assert (entry.key, entry.value, entry.exported) == ("export", "1", False)
++
++
++def test_key_named_export_with_space_before_equals():
++    entry = only_entry("export =1")
++    assert (entry.key, entry.value, entry.exported) == ("export", "1", False)
++
++
++def test_export_without_equals_is_an_error():
++    result = parse("export KEY")
++    assert result.entries == []
++    assert [e.message for e in result.errors] == ["expected KEY=VALUE"]
++
++
+ def test_whitespace_around_equals_is_trimmed():
+     entry = only_entry("  KEY  =  spaced value  ")
+     assert entry.key == "KEY"

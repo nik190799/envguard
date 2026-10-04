@@ -1,0 +1,63 @@
+{
+  "agent_result": "success",
+  "agent_subtype": "success",
+  "apply_status": "ok",
+  "area_depth": 2,
+  "base_sha": "f97cd3e9deff5c019fd375ea09007a31892254e9",
+  "classes": [
+    "guarded:tests:modify"
+  ],
+  "completed_at": "2026-10-04T04:48:11Z",
+  "config_sha256": "9fc18789a36cd35dc1a776460c34111991cd7217132443543ad5001cc37646f2",
+  "detector_version": "9c89829c1520af69bb4edcfd42675d986ca0a0cc666e3e931fe3c7fc46ae7c49",
+  "evidence": {
+    "failing_tests": [],
+    "files": [
+      {
+        "area": ".",
+        "op": "M",
+        "path": "CHANGELOG.md",
+        "source": false,
+        "test": false
+      },
+      {
+        "area": "src/envguard",
+        "op": "M",
+        "path": "src/envguard/core/parser.py",
+        "source": true,
+        "test": false
+      },
+      {
+        "area": "tests",
+        "op": "M",
+        "path": "tests/test_parser.py",
+        "source": false,
+        "test": true
+      }
+    ],
+    "guarded": [
+      {
+        "op": "modify",
+        "path": "tests/test_parser.py",
+        "root": "tests"
+      }
+    ],
+    "import_edges": [],
+    "rule_hits": []
+  },
+  "gate_step": "none",
+  "issue": 2,
+  "lessons_cited": [],
+  "patch_bytes": 2658,
+  "patch_sha256": "f659fd66e5b9161bf2b0bc36f78f3b69b8fe9a2643e5f280f2e997a10421bc8f",
+  "pr": 11,
+  "published": true,
+  "published_sha": "a330249a3b93836ef25f541420a449f0e3c7387f",
+  "repo": "nik190799/envguard",
+  "ruleset_sha256": "3978e9a5666975866a61ca892314dba9193073c37180a1cd81ccfb1a55c24e21",
+  "run_attempt": 1,
+  "run_id": "37177923739",
+  "schema": "cadence.observation/1",
+  "truncated": false,
+  "verify_result": "success"
+}
