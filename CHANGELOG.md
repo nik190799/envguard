@@ -6,6 +6,11 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The parser accepts `export` followed by any whitespace (a tab or several spaces), not just a
+  single space. A key literally named `export` (`export=1`) still parses as a plain entry.
+
 ## [0.1.0] - 2026-10-03
 
 ### Added
