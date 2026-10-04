@@ -17,7 +17,8 @@ def read_text(path: str | Path) -> str:
     if p.is_dir():
         raise EnvFileError(f"not a file: {p}")
     try:
-        return p.read_text(encoding="utf-8")
+        # utf-8-sig drops one leading byte order mark, as saved by some Windows editors.
+        return p.read_text(encoding="utf-8-sig")
     except FileNotFoundError:
         raise EnvFileError(f"file not found: {p}") from None
     except UnicodeDecodeError:
