@@ -1,0 +1,87 @@
+# ISO/IEC 25010:2023 — Systems and Software Quality Models
+# Edition 2, November 2023.
+# https://www.iso.org/standard/78176.html
+#
+# Edition 2 changes from 2011:
+#   - Added Safety as a 9th characteristic
+#   - "Usability" replaced by "Interaction Capability"
+#   - "Portability" replaced by "Flexibility"
+#   - Quality in Use split into ISO/IEC 25019:2023 (separate standard)
+#
+# Cadence mapping aggregates DoD checkbox tags (`<!-- iso25010: [...] -->`)
+# and reports coverage per characteristic via /cadence-compliance.
+
+standard:
+  id: iso-25010
+  version: "2023"
+  edition: 2
+  url: https://www.iso.org/standard/78176.html
+  authority: "International Organization for Standardization"
+
+characteristics:
+
+  - id: functional-suitability
+    description: Degree to which the product or system provides functions that meet stated and implied needs
+    sub_characteristics: [completeness, correctness, appropriateness]
+    cadence_artifacts:
+      - glob: "tests/**"
+      - path: "docs/DEFINITION_OF_DONE.md"
+
+  - id: performance-efficiency
+    description: Performance relative to the amount of resources used under stated conditions
+    sub_characteristics: [time-behaviour, resource-utilization, capacity]
+    cadence_artifacts: []
+    notes: "Add benchmarks under cadence.yaml commands.test in Phase 2."
+
+  - id: compatibility
+    description: Degree to which a product can exchange information and perform required functions while sharing the same environment
+    sub_characteristics: [co-existence, interoperability]
+    cadence_artifacts: []
+
+  - id: interaction-capability  # replaces 2011 "Usability"
+    description: Degree to which a product or system can be used by specified users to interact effectively
+    sub_characteristics:
+      [appropriateness-recognizability, learnability, operability, user-error-protection, user-engagement, inclusivity, accessibility]
+    cadence_artifacts: []
+    notes: "Accessibility ADRs and audits land here."
+
+  - id: reliability
+    description: Degree to which a system performs specified functions under specified conditions
+    sub_characteristics: [faultlessness, availability, fault-tolerance, recoverability]
+    cadence_artifacts:
+      - path: "docs/PATTERNS.md"
+        anchor: error-surface
+      - glob: "docs/ADR/*-error-*.md"
+      - glob: "docs/ADR/*-mutation-*.md"
+
+  - id: security
+    description: Degree to which a product or system defends against attack patterns by malicious actors
+    sub_characteristics: [confidentiality, integrity, non-repudiation, accountability, authenticity, resistance]
+    cadence_artifacts:
+      - path: "docs/PATTERNS.md"
+        anchor: security
+      - path: "standards/nist-ssdf-1.1.yaml"
+      - glob: "docs/ADR/*-secret-*.md"
+      - glob: "docs/ADR/*-auth-*.md"
+
+  - id: maintainability
+    description: Degree of effectiveness and efficiency with which a product can be modified
+    sub_characteristics: [modularity, reusability, analysability, modifiability, testability]
+    cadence_artifacts:
+      - path: "tool/check_boundaries.py"
+      - path: "docs/PATTERNS.md"
+      - glob: "docs/ADR/*-narrow-providers*.md"
+      - glob: "docs/ADR/*-layer-*.md"
+
+  - id: flexibility  # replaces 2011 "Portability"
+    description: Degree to which a product can be adapted to new contexts, requirements, or environments
+    sub_characteristics: [adaptability, scalability, installability, replaceability]
+    cadence_artifacts:
+      - path: "docs/cross-tool-portability.md"
+
+  - id: safety  # new in 2023
+    description: Degree to which a product mitigates the potential risk of harm to people, business, software, property, or environment
+    sub_characteristics:
+      [operational-constraint, risk-identification, fail-safe, hazard-warning, safe-integration]
+    cadence_artifacts: []
+    notes: "Populate for safety-critical projects (medical, automotive, avionics)."

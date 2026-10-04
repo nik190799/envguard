@@ -1,0 +1,14 @@
+# Cadence factory stack profile: the runtime setup the factory workflow's
+# agent, agent-retry, verify, verify-retry and retro-plan jobs get. Mirrors
+# .github/workflows/ci.yml (pip install -r requirements-dev.txt, then
+# pip install -e .); requirements-dev.txt pins pytest and ruff to the
+# versions the code is formatted and tested with today.
+# Change this file and re-render; never edit the rendered workflow by hand:
+#   python <plugin>/templates/tool/render_factory_workflow.py \
+#     --profile .cadence/factory-stack.yaml \
+#     --out .github/workflows/cadence-factory.yml --repo-root .
+schema: 1
+python:
+  version: "3.12"
+  requirements: [requirements-dev.txt]
+  editable: ["."]

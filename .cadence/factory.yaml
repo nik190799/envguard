@@ -1,0 +1,134 @@
+# Cadence factory configuration.
+#
+# Rendered by /cadence-factory-setup into .cadence/factory.yaml. Read by
+# tool/ledger.py (the budget) and by .github/workflows/cadence-factory.yml
+# (the per-run cap, max_turns, retry and autonomy). Change it by PR, like
+# anything else under .cadence/.
+#
+# Cadence never pays for, resells or proxies model usage. These caps bound
+# how much of YOUR Anthropic API key the factory may spend. Also set a spend
+# limit on the key itself in the Anthropic Console as a backstop.
+
+budget:
+  # Hard cap for one run, in US dollars. Passed to Claude Code as
+  # --max-budget-usd. A run that reports no cost (crash, timeout, cancel)
+  # is booked at this full amount, never at zero.
+  # Must be greater than 0 and no more than daily_usd.
+  per_run_usd: 2.00
+
+  # Cap on total spend per UTC day (00:00 to 23:59 UTC), in US dollars.
+  # Before each dispatch, `ledger.py check` adds today's booked spend, one
+  # per_run_usd for every run still in flight and one for the new run, and
+  # refuses to start the run if that worst case would exceed this cap. A
+  # build in its automatic retry (retry below) counts twice in flight.
+  # Must be greater than 0.
+  daily_usd: 6.00
+
+# Maximum agent turns for one run. Passed to Claude Code as --max-turns.
+# A positive whole number.
+max_turns: 60
+
+# One automatic retry when the Definition of Done gate fails.
+#   0   off: a failed gate labels the issue dod-failed and stops.
+#   1   one retry (the default).
+# Only a failure at format, lint, boundaries or test is retried; a patch
+# that does not apply, a change to .github/workflows/ or a config error is
+# not. The retry runs in the same workflow run, under the same /approve and
+# the same claim, and starts from the first attempt's patch, with the step
+# that failed and a cleaned excerpt of the verify log. It can spend up to
+# one more budget.per_run_usd, and the daily cap is checked for it, with
+# this run counted, before it starts.
+retry:
+  on_dod_fail: 1
+
+# How far the factory may go without a human.
+#   pr-only   The factory opens a draft PR; a human always reviews and
+#             merges it. This is the default.
+# Auto-merge is opt-in, per path, and never covers tests, CI config or
+# .cadence/. The one exception is an eval sandbox (learning.mode below).
+autonomy: pr-only
+
+# The learning loop (docs/LEARNING.md in nik190799/cadence). Every agent
+# attempt is scanned; lessons climb note -> pattern -> check and arrive as
+# ONE retro PR (branch cadence/retro) that a human merges. Read by
+# tool/signals.py, tool/ladder.py, tool/metrics.py and tool/ledger.py, and
+# by the workflow's route, verify and verify-retry jobs (guarded_paths,
+# test_roots). The retro PR can never change this file. Every value below is
+# the default.
+learning:
+  # observe        measure only, never propose (the rules-frozen eval arm)
+  # on             propose a retro PR when the ladder changes (default)
+  # eval-sandbox   on, and the retro PR merges itself, but only when the
+  #                repo variable CADENCE_EVAL_SANDBOX is 'true' AND the repo
+  #                is private. For eval repos only, never a real one.
+  # Keep the quotes: YAML 1.1 reads a bare `on` as true.
+  mode: "on"
+
+  # A class is promoted once it has occurred on this many DISTINCT issues,
+  # so one stubborn ticket cannot promote a rule on its own.
+  promote_after: 2
+
+  # The ladder counts occurrences in the last window_attempts attempts or
+  # the last window_days days, whichever holds more.
+  window_attempts: 50
+  window_days: 60
+
+  # N for the repeat and escape rates: a class repeats when it occurred in
+  # one of the N attempts before (on another issue). 0 means all of them.
+  repeat_window: 10
+
+  # An area is the first area_depth directories of a path:
+  # src/domain/order.ts -> src/domain. 1 to 4. Changing it re-keys every class.
+  area_depth: 2
+
+  # Per retro PR, and in total.
+  max_checks_per_pr: 3
+  max_patterns_per_pr: 5
+  max_retirements_per_pr: 5
+  max_active_patterns: 25
+
+  # Retire a learned check that has not fired in 100 exposed attempts and is
+  # at least 90 days old. Off by default: "never fires" can also mean "works".
+  retire_dormant: false
+
+  # Directories the Definition of Done gate restores from the base branch
+  # before verify runs: edits to existing files there are discarded and
+  # flagged, and new files there are left out (except under test_roots).
+  # The gate always guards .github, .cadence, scripts and tool as well,
+  # whatever this list says. Each entry is a directory path relative to the
+  # repo root, top-level or nested: tests, server/tests, web/src/__tests__.
+  # 1 to 6 segments of letters, digits, '_', '.' and '-'; no '.' or '..'
+  # segment, no leading or trailing '/', no glob. At most 16 entries. Keep
+  # tests/fixtures/retro guarded (it is under tests here): the learned checks
+  # are proven on it.
+  guarded_paths: [tests, .github, .cadence, scripts, tool]
+  # Where the agent may ADD files (new tests); existing files there are
+  # still restored. Same shape, at most 16. Each one is a guarded path or
+  # lies under one, and never under .github, .cadence, scripts or tool.
+  # A file under a test root counts as a test (as do test_globs). The agent
+  # is told both lists. Example for tests in server/tests:
+  #   guarded_paths: [server/tests, tests, .github, .cadence, scripts, tool]
+  #   test_roots: [server/tests, tests]
+  test_roots: [tests]
+  # What counts as a test file (a change with none is missing-test).
+  test_globs: ["tests/**", "test/**", "**/*.test.*", "**/*.spec.*", "**/test_*.py", "**/*_test.py", "**/*_test.go"]
+  # Human edits to these never count as a lesson.
+  edit_ignore: ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "**/*.snap"]
+
+  # Which closed factory PRs to read: closed within harvest_since_days days,
+  # at least settle_minutes ago, at most harvest_max_prs per learn run.
+  harvest_since_days: 30
+  harvest_max_prs: 10
+  settle_minutes: 10
+
+  # Model labels for review comments that carry no /cadence-class command.
+  # Off by default, and always off in eval-sandbox. The labels are enums
+  # only and are checked before use. Pin a model id when you turn it on.
+  classify: false
+  model: ""
+
+  # The classify spend, in US dollars. Counted inside budget.daily_usd too.
+  # 0 < per_run_usd <= daily_usd <= budget.daily_usd.
+  budget:
+    per_run_usd: 0.25
+    daily_usd: 1.00

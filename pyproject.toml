@@ -30,11 +30,16 @@ packages = ["src/envguard"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Cadence factory: deliberately failing samples that prove learned checks.
+addopts = "--ignore=tests/fixtures/retro"
 
 [tool.ruff]
 line-length = 100
 target-version = "py310"
 src = ["src", "tests"]
+# Cadence factory: tool/ is vendored from the Cadence plugin (its own style);
+# tests/fixtures/retro holds deliberately failing samples that prove learned checks.
+extend-exclude = ["tool", "tests/fixtures/retro"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM"]

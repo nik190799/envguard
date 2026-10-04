@@ -1,0 +1,33 @@
+# Cadence project config. Read by scripts/verify.sh and tool/check_boundaries.py.
+# Generated from the plugin's python recipe by /cadence-init, then set to
+# mirror .github/workflows/ci.yml. One command per entry, on one line.
+# The factory restores .cadence/ from the default branch before every gate.
+
+commands:
+  format:
+    - "ruff format --check ."
+  lint:
+    - "ruff check ."
+  test:
+    - "python -m pytest -q"
+
+# Layering of src/envguard (docs/PATTERNS.md §1):
+#   core  imports nothing from io or cli
+#   io    may import core only
+#   cli   may import core and io
+# Each layer is listed twice: the src/ path catches relative imports, the
+# package path catches absolute ones (from envguard.io import ...).
+boundaries:
+  - where: "src/envguard/core/**"
+    forbidden:
+      - "src/envguard/io/**"
+      - "envguard/io/**"
+      - "src/envguard/cli/**"
+      - "envguard/cli/**"
+    reason: "core is the pure layer: it may not import envguard.io or envguard.cli"
+
+  - where: "src/envguard/io/**"
+    forbidden:
+      - "src/envguard/cli/**"
+      - "envguard/cli/**"
+    reason: "io may import envguard.core only, never envguard.cli"

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nik190799.github.io/cadence/schemas/cadence-yaml.schema.json",
+  "title": "Cadence project config (.cadence/cadence.yaml)",
+  "description": "Schema for the per-project Cadence configuration file. Tightens what verify.sh and check_boundaries.py expect.",
+  "type": "object",
+  "required": ["commands"],
+  "additionalProperties": true,
+  "properties": {
+    "commands": {
+      "type": "object",
+      "description": "Shell commands the verify pipeline runs in order. Each section accepts a list of commands (or a single string).",
+      "required": ["format", "lint", "test"],
+      "additionalProperties": {
+        "$ref": "#/$defs/commandList"
+      },
+      "properties": {
+        "format": { "$ref": "#/$defs/commandList" },
+        "lint":   { "$ref": "#/$defs/commandList" },
+        "test":   { "$ref": "#/$defs/commandList" }
+      }
+    },
+    "boundaries": {
+      "type": "array",
+      "description": "Import-boundary rules enforced by tool/check_boundaries.py.",
+      "items": {
+        "$ref": "#/$defs/boundary"
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "description": "Per-standard exemptions for compliance reports.",
+      "additionalProperties": false,
+      "properties": {
+        "exclude": {
+          "type": "object",
+          "description": "Practice/characteristic IDs to mark as N/A in compliance reports.",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "commandList": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      ]
+    },
+    "boundary": {
+      "type": "object",
+      "required": ["where", "forbidden", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[LB]-[0-9a-f]{8}$",
+          "description": "Optional rule id. Rules learned by the factory carry L-xxxxxxxx (see .cadence/lessons.yaml); a rule without one is a seed rule and gets a computed B-xxxxxxxx id."
+        },
+        "where": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Glob for files this rule applies to (e.g., src/features/**)"
+        },
+        "forbidden": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "Path-glob patterns that files matching `where` may not import."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Human-readable explanation, printed on violation."
+        }
+      }
+    }
+  }
+}

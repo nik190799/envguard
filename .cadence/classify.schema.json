@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nik190799.github.io/cadence/schemas/classify.schema.json",
+  "title": "Cadence findings classification",
+  "description": "The only output of the read-only cadence-findings skill: for each review comment it was given, a category from a fixed list, optionally an existing class key and an agent-added import line from the item's own list. No free text. tool/signals.py apply-classified checks every claim before using it; see docs/LEARNING.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "items"],
+  "properties": {
+    "schema": { "const": "cadence.classify/1" },
+    "items": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_id", "category", "confidence"],
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "The item_id of an entry in items.jsonl."
+          },
+          "category": {
+            "type": "string",
+            "enum": ["defect", "rule-violation", "nit", "new-preference", "scope-change", "question", "other"]
+          },
+          "same_as": {
+            "type": ["string", "null"],
+            "maxLength": 200,
+            "pattern": "^(import-edge|guarded|missing-test|test|edit|review|gate|agent|pr):[A-Za-z0-9_./@+:>-]{1,180}$",
+            "description": "A class key from vocab.json in the same area as the item, or null."
+          },
+          "edge": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "line_no"],
+                "properties": {
+                  "path": { "type": "string", "minLength": 1, "maxLength": 300 },
+                  "line_no": { "type": "integer", "minimum": 1 }
+                }
+              }
+            ],
+            "description": "One entry of the item's own edges list (path and line_no), or null."
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    }
+  }
+}

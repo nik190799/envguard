@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nik190799.github.io/cadence/schemas/lessons.schema.json",
+  "title": "Cadence learned lessons (.cadence/lessons.yaml)",
+  "description": "The ladder state for factory lessons: patterns, checks, and retired and suppressed classes. Written only by tool/ladder.py apply and changed only through the retro PR (docs/LEARNING.md). Validates the file as yaml.safe_load returns it. Notes never enter this file.",
+  "type": "object",
+  "required": ["schema", "lessons"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "cadence.lessons/1" },
+    "lessons": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/lesson" }
+    }
+  },
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "rung": {
+      "enum": ["pattern", "check", "retired", "suppressed"]
+    },
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "class_key", "rung", "since"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^L-[0-9a-f]{8}$",
+          "description": "lesson_id(class_key): \"L-\" + uuid5(NS_CADENCE, \"lesson|\" + class_key).hex[:8]"
+        },
+        "class_key": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^(import-edge|guarded|missing-test|test):[A-Za-z0-9_./@+:>-]{1,180}$"
+        },
+        "rung": { "$ref": "#/$defs/rung" },
+        "since": {
+          "$ref": "#/$defs/date",
+          "description": "UTC date the lesson entered its current rung"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 280,
+          "pattern": "^[^\\r\\n]+$",
+          "description": "Fixed-template text over validated keys, paths and issue numbers"
+        },
+        "issues": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/uuid" }
+        },
+        "check": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "rule_id", "fixture"],
+          "properties": {
+            "kind": { "const": "boundary-rule" },
+            "rule_id": { "type": "string", "pattern": "^L-[0-9a-f]{8}$" },
+            "fixture": {
+              "type": "string",
+              "pattern": "^tests/fixtures/retro/[0-9a-f]{8}/$"
+            }
+          }
+        },
+        "retired": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["on", "reason"],
+          "properties": {
+            "on": { "$ref": "#/$defs/date" },
+            "reason": {
+              "enum": [
+                "broken",
+                "blocks-merged-code",
+                "stale",
+                "dormant",
+                "cap",
+                "human-removed"
+              ]
+            }
+          }
+        },
+        "history": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rung", "on"],
+            "properties": {
+              "rung": { "$ref": "#/$defs/rung" },
+              "on": { "$ref": "#/$defs/date" }
+            }
+          }
+        },
+        "rejections": { "type": "integer", "minimum": 0 },
+        "pinned": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "rung": { "enum": ["pattern", "check"] } },
+            "required": ["rung"]
+          },
+          "then": { "required": ["text"] }
+        },
+        {
+          "if": {
+            "properties": { "rung": { "const": "check" } },
+            "required": ["rung"]
+          },
+          "then": { "required": ["check"] }
+        },
+        {
+          "if": {
+            "properties": { "rung": { "const": "retired" } },
+            "required": ["rung"]
+          },
+          "then": { "required": ["retired"] }
+        }
+      ]
+    }
+  }
+}

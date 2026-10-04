@@ -1,0 +1,135 @@
+# SOC 2 (AICPA Trust Services Criteria) — Cadence stub mapping
+#
+# This is a STUB. The AICPA's Trust Services Criteria (2017, revised 2022)
+# define 64 Common Criteria across nine series (CC1–CC9). Mapping each
+# individual CC point to Cadence artifacts requires input from a licensed
+# CPA performing the actual SOC 2 examination — the mapping that makes
+# sense for one auditor's interpretation may not satisfy another's.
+#
+# Cadence ships the nine CC-series families as scaffolding so the
+# /cadence-compliance --standard all report can show "this is a thing
+# Cadence will support" without pretending to have done the work that
+# only an auditor can validate.
+#
+# To turn this from stub into real mapping, work with your auditor to:
+#   1. Decide the scope (Security only, or Security + Availability + ...
+#      Confidentiality + Privacy + Processing Integrity)
+#   2. For each in-scope CC point, identify which Cadence artifact (ADR,
+#      PATTERNS section, retro finding) supports the criterion
+#   3. Convert this stub into per-CC entries with cadence_artifacts paths
+#
+# DO NOT cite the stub as evidence of SOC 2 readiness. It is a roadmap,
+# not a compliance claim.
+
+standard:
+  id: aicpa-soc2-tsc
+  version: "2017 (revised 2022)"
+  url: https://www.aicpa-cima.com/topic/audit-assurance/audit-and-assurance-greater-than-soc-2
+  authority: "American Institute of Certified Public Accountants"
+  reference_implementation_status: "stub — auditor input required for real mapping"
+
+# Top-level Common Criteria families. Stubbed at the family level;
+# individual CC points (e.g. CC1.1, CC1.2, …, CC9.2) are intentionally
+# not enumerated. See header for rationale.
+common_criteria:
+
+  - id: CC1
+    name: Control Environment
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Cadence's TEAM_PROTOCOL.md, ROLE_SPECS.md, and PATTERNS.md establish
+      a control environment for engineering decisions. Mapping individual
+      CC1.x criteria requires auditor input.
+
+  - id: CC2
+    name: Communication and Information
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      FRAMEWORK_CHANGELOG.md and the retrospective protocol provide
+      structured information flow. ADRs document architectural decisions.
+
+  - id: CC3
+    name: Risk Assessment
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      ADR Status, Context, Consequences sections capture risk assessment
+      per architectural decision. The retrospective protocol's four-layer
+      fix mapping is a form of risk treatment.
+
+  - id: CC4
+    name: Monitoring Activities
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      /cadence-verify pipeline and CI workflow constitute monitoring of
+      coding standards. /cadence-retro is the periodic review.
+
+  - id: CC5
+    name: Control Activities
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Boundary checker (tool/check_boundaries.py), DoD checklist, and
+      Reviewer subagent constitute control activities for code.
+
+  - id: CC6
+    name: Logical and Physical Access Controls
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Out of typical Cadence scope. Application-level concern. Auditors
+      will look at IAM, secrets management, infrastructure access — not
+      framework artifacts.
+
+  - id: CC7
+    name: System Operations
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Partly in scope (CI workflows, deployment gates). Mostly out of
+      scope (incident response, capacity, monitoring runbooks).
+
+  - id: CC8
+    name: Change Management
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Strongest fit for Cadence. ADRs document significant changes;
+      retros document the framework's own evolution; SemVer + Conventional
+      Commits + FRAMEWORK_CHANGELOG.md provide an audit trail.
+
+  - id: CC9
+    name: Risk Mitigation
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Retrospective Layer 3 emissions are a form of automated risk
+      mitigation (new boundary rule prevents recurrence). Auditor may
+      accept this as evidence of CC9.x continuous improvement.
+
+# Trust Services Criteria categories beyond the Common Criteria.
+# Most engagements only include Security; the others are opt-in.
+additional_categories:
+
+  - id: A
+    name: Availability
+    status: out-of-scope
+    notes: "Framework concern; populate if relevant."
+
+  - id: C
+    name: Confidentiality
+    status: out-of-scope
+    notes: "Application concern; framework provides ADR + PATTERNS scaffolding."
+
+  - id: PI
+    name: Processing Integrity
+    status: out-of-scope
+    notes: "Domain-specific; populate per project."
+
+  - id: P
+    name: Privacy
+    status: out-of-scope
+    notes: "Tightly coupled to data flows; populate per project."
