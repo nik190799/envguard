@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# local verify markers
+.cadence/.last_verify_ok
+.cadence/.last_verify_sha
+.cadence/last_verify.log
