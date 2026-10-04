@@ -8,6 +8,8 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The parser accepts `export` followed by any whitespace (a tab or several spaces), not just a
+  single space. A key literally named `export` (`export=1`) still parses as a plain entry.
 - `envguard diff` now writes one warning per malformed line to stderr, naming only the file
   and line number, instead of dropping the line silently.
 - `envguard check` reports a `missing` key at the line where it is defined in the example file
