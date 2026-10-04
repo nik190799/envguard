@@ -9,6 +9,22 @@ def test_load_env_parses_file(tmp_path):
     assert load_env(path).distinct_keys() == ["A", "B"]
 
 
+def test_leading_bom_is_ignored(tmp_path):
+    path = tmp_path / ".env"
+    path.write_bytes(b"\xef\xbb\xbfA=1\n")
+    result = load_env(path)
+    assert result.errors == []
+    assert len(result.entries) == 1
+    entry = result.entries[0]
+    assert (entry.key, entry.value, entry.line_no) == ("A", "1", 1)
+
+
+def test_only_one_leading_bom_is_removed(tmp_path):
+    path = tmp_path / ".env"
+    path.write_bytes(b"\xef\xbb\xbf\xef\xbb\xbfA=1\n")
+    assert read_text(path) == "﻿A=1\n"
+
+
 def test_missing_file_raises(tmp_path):
     with pytest.raises(EnvFileError, match="file not found"):
         read_text(tmp_path / "nope.env")

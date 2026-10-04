@@ -27,6 +27,14 @@ def test_check_clean_exits_zero(write, capsys):
     assert out.startswith("OK:")
 
 
+def test_check_bom_prefixed_files_exit_zero(write, capsys):
+    env = write(".env", "﻿A=1\n")
+    example = write(".env.example", "﻿A=\n")
+    code, out, _ = run(capsys, "check", "--env", env, "--example", example)
+    assert code == 0
+    assert out.startswith("OK:")
+
+
 def test_check_missing_key_exits_one(write, capsys):
     env = write(".env", "A=1\n")
     example = write(".env.example", "A=\nB=\n")
