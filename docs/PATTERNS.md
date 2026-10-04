@@ -152,3 +152,5 @@ retro PR rewrites it.
 ## Learned patterns (factory)
 
 Generated from factory runs by `tool/ladder.py`; change it through the retro PR. See docs/LEARNING.md.
+
+- **L-b0eb2df1** (pattern): Do not modify or delete existing files under `tests/`; the gate restores them (seen in #1, #2).
