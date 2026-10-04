@@ -91,9 +91,10 @@ def test_diff_reports_keys_only(write, capsys):
 def test_diff_identical_exits_zero(write, capsys):
     a = write("a.env", "A=1\n")
     b = write("b.env", "A=1\n")
-    code, out, _ = run(capsys, "diff", a, b)
+    code, out, err = run(capsys, "diff", a, b)
     assert code == 0
     assert out.strip() == "no differences"
+    assert err == ""
 
 
 def test_diff_missing_file_exits_two(write, tmp_path, capsys):
