@@ -1,0 +1,15 @@
+{
+  "issue": 3,
+  "run_id": "37177924341",
+  "run_attempt": 1,
+  "outcome": "success",
+  "dod": "fail",
+  "total_cost_usd": 0.4960668000000001,
+  "booked_usd": 0.4960668000000001,
+  "cost_source": "reported",
+  "num_turns": 36,
+  "per_run_cap_usd": 2.0,
+  "recorded_at": "2026-10-04T04:53:04Z",
+  "stage": "build",
+  "base_sha": "f97cd3e9deff5c019fd375ea09007a31892254e9"
+}

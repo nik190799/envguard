@@ -1,0 +1,17 @@
+{
+  "issue": 3,
+  "run_id": "37177924341.retry1",
+  "run_attempt": 1,
+  "outcome": "success",
+  "dod": "pass",
+  "total_cost_usd": 0.4485001999999999,
+  "booked_usd": 0.4485001999999999,
+  "cost_source": "reported",
+  "num_turns": 25,
+  "per_run_cap_usd": 2.0,
+  "recorded_at": "2026-10-04T04:53:04Z",
+  "stage": "build",
+  "pr": 13,
+  "published_sha": "3e9179d4f03e552d8826508e9ff530377ea6d487",
+  "base_sha": "f97cd3e9deff5c019fd375ea09007a31892254e9"
+}

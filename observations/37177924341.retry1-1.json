@@ -1,0 +1,152 @@
+{
+  "agent_result": "success",
+  "agent_subtype": "success",
+  "apply_status": "ok",
+  "area_depth": 2,
+  "base_sha": "f97cd3e9deff5c019fd375ea09007a31892254e9",
+  "classes": [
+    "guarded:tests:modify"
+  ],
+  "completed_at": "2026-10-04T04:52:28Z",
+  "config_sha256": "9fc18789a36cd35dc1a776460c34111991cd7217132443543ad5001cc37646f2",
+  "detector_version": "9c89829c1520af69bb4edcfd42675d986ca0a0cc666e3e931fe3c7fc46ae7c49",
+  "evidence": {
+    "failing_tests": [],
+    "files": [
+      {
+        "area": ".",
+        "op": "M",
+        "path": "CHANGELOG.md",
+        "source": false,
+        "test": false
+      },
+      {
+        "area": ".",
+        "op": "M",
+        "path": "README.md",
+        "source": false,
+        "test": false
+      },
+      {
+        "area": "src/envguard",
+        "op": "M",
+        "path": "src/envguard/cli/main.py",
+        "source": true,
+        "test": false
+      },
+      {
+        "area": "src/envguard",
+        "op": "M",
+        "path": "src/envguard/cli/output.py",
+        "source": true,
+        "test": false
+      },
+      {
+        "area": "tests",
+        "op": "M",
+        "path": "tests/test_cli.py",
+        "source": false,
+        "test": true
+      },
+      {
+        "area": "tests",
+        "op": "A",
+        "path": "tests/test_cli_locations.py",
+        "source": false,
+        "test": true
+      },
+      {
+        "area": "tests",
+        "op": "A",
+        "path": "tests/test_output.py",
+        "source": false,
+        "test": true
+      }
+    ],
+    "guarded": [
+      {
+        "op": "modify",
+        "path": "tests/test_cli.py",
+        "root": "tests"
+      }
+    ],
+    "import_edges": [
+      {
+        "from_area": "tests",
+        "key": "import-edge:tests->pkg:pytest",
+        "kind": "python",
+        "line": "import pytest",
+        "line_no": 3,
+        "line_sha256": "db7b0741c94798db5932296122312b7b87d6e5a9e2ee29833a9949d1f774f40b",
+        "path": "tests/test_cli_locations.py",
+        "to": "pkg:pytest"
+      },
+      {
+        "from_area": "tests",
+        "key": "import-edge:tests->src/envguard",
+        "kind": "python",
+        "line": "from envguard.cli.main import main",
+        "line_no": 5,
+        "line_sha256": "2ddac27a4a3cf64a1484c5089aa043b79a89daef6568884909d92dfba2c8bbf8",
+        "path": "tests/test_cli_locations.py",
+        "to": "src/envguard"
+      },
+      {
+        "from_area": "tests",
+        "key": "import-edge:tests->src/envguard",
+        "kind": "python",
+        "line": "from envguard.cli.output import example_lines, format_check, format_diff_warnings",
+        "line_no": 1,
+        "line_sha256": "99e48d3482254741b4e897c03be97cb3de6263b88711b44f37ddfc85e0b80d9e",
+        "path": "tests/test_output.py",
+        "to": "src/envguard"
+      },
+      {
+        "from_area": "tests",
+        "key": "import-edge:tests->src/envguard",
+        "kind": "python",
+        "line": "from envguard.core.checks import check_env",
+        "line_no": 2,
+        "line_sha256": "01ef8b1c1d8323ae6e046e3685b54370e1bec4f635ad8e1c2f11cc492806c365",
+        "path": "tests/test_output.py",
+        "to": "src/envguard"
+      },
+      {
+        "from_area": "tests",
+        "key": "import-edge:tests->src/envguard",
+        "kind": "python",
+        "line": "from envguard.core.models import ParseError",
+        "line_no": 3,
+        "line_sha256": "f8eb0ed6d4c98a2746371aba70ec546d0690030829bdb46ccee6aa4be514166b",
+        "path": "tests/test_output.py",
+        "to": "src/envguard"
+      },
+      {
+        "from_area": "tests",
+        "key": "import-edge:tests->src/envguard",
+        "kind": "python",
+        "line": "from envguard.core.parser import parse",
+        "line_no": 4,
+        "line_sha256": "035c8e21752774cd33cf7b6c9a4e97da5b2f3b7b3f1f731ebffbdc1774f03a12",
+        "path": "tests/test_output.py",
+        "to": "src/envguard"
+      }
+    ],
+    "rule_hits": []
+  },
+  "gate_step": "none",
+  "issue": 3,
+  "lessons_cited": [],
+  "patch_bytes": 10303,
+  "patch_sha256": "bb1e31f3d3c4b934c21329e7d71645ced8524238ad7949a60526c3af112c94c2",
+  "pr": 13,
+  "published": true,
+  "published_sha": "3e9179d4f03e552d8826508e9ff530377ea6d487",
+  "repo": "nik190799/envguard",
+  "ruleset_sha256": "3978e9a5666975866a61ca892314dba9193073c37180a1cd81ccfb1a55c24e21",
+  "run_attempt": 1,
+  "run_id": "37177924341.retry1",
+  "schema": "cadence.observation/1",
+  "truncated": false,
+  "verify_result": "success"
+}

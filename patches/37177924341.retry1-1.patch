@@ -1,0 +1,274 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 1db8ae8..ee3c028 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -6,6 +6,13 @@ and this project uses [Semantic Versioning](https://semver.org/).
+ 
+ ## [Unreleased]
+ 
++### Fixed
++
++- `envguard diff` now writes one warning per malformed line to stderr, naming only the file
++  and line number, instead of dropping the line silently.
++- `envguard check` reports a `missing` key at the line where it is defined in the example file
++  (for example `.env.example:3`) instead of just the env file path.
++
+ ## [0.1.0] - 2026-10-03
+ 
+ ### Added
+diff --git a/README.md b/README.md
+index 1d42e45..17ef193 100644
+--- a/README.md
++++ b/README.md
+@@ -41,7 +41,7 @@ LOG_LEVEL=info
+ Example output:
+ 
+ ```text
+-.env: error: DATABASE_URL: missing from env file [missing]
++.env.example:1: error: DATABASE_URL: missing from env file [missing]
+ .env:4: warning: OLD_FLAG: not listed in example file [extra]
+ 1 error(s), 1 warning(s)
+ ```
+@@ -60,6 +60,13 @@ envguard diff .env.staging .env.prod
+ 
+ Only key names are shown. A changed value is reported as `changed`, never printed.
+ 
++A line in either file that cannot be parsed is ignored by the comparison, with one
++warning per line on stderr naming only the file and line number:
++
++```text
++envguard: warning: .env.prod:7: malformed line, ignored
++```
++
+ ### Exit codes
+ 
+ | Code | `check`                         | `diff`              |
+diff --git a/src/envguard/cli/main.py b/src/envguard/cli/main.py
+index 6f63186..f51c6bc 100644
+--- a/src/envguard/cli/main.py
++++ b/src/envguard/cli/main.py
+@@ -7,7 +7,7 @@ import sys
+ from collections.abc import Sequence
+ 
+ from envguard import __version__
+-from envguard.cli.output import format_check, format_diff
++from envguard.cli.output import example_lines, format_check, format_diff, format_diff_warnings
+ from envguard.core.checks import check_env
+ from envguard.core.diff import diff_env
+ from envguard.core.models import Severity
+@@ -47,14 +47,19 @@ def cmd_check(args: argparse.Namespace) -> int:
+     env = load_env(args.env)
+     example = load_env(args.example)
+     issues = check_env(env, example)
+-    for line in format_check(issues, args.env, args.example):
++    for line in format_check(issues, args.env, args.example, example_lines(example)):
+         print(line)
+     has_errors = any(i.severity is Severity.ERROR for i in issues)
+     return EXIT_PROBLEMS if has_errors else EXIT_OK
+ 
+ 
+ def cmd_diff(args: argparse.Namespace) -> int:
+-    result = diff_env(load_env(args.old), load_env(args.new))
++    old = load_env(args.old)
++    new = load_env(args.new)
++    for path, parsed in ((args.old, old), (args.new, new)):
++        for warning in format_diff_warnings(parsed.errors, path):
++            print(warning, file=sys.stderr)
++    result = diff_env(old, new)
+     for line in format_diff(result):
+         print(line)
+     return EXIT_OK if result.is_empty else EXIT_PROBLEMS
+diff --git a/src/envguard/cli/output.py b/src/envguard/cli/output.py
+index 3c2e5fb..a3063fb 100644
+--- a/src/envguard/cli/output.py
++++ b/src/envguard/cli/output.py
+@@ -3,20 +3,43 @@
+ from __future__ import annotations
+ 
+ from envguard.core.diff import DiffResult
+-from envguard.core.models import Issue, Severity
++from envguard.core.models import Issue, IssueKind, ParseError, ParseResult, Severity
+ 
+ 
+-def format_issue(issue: Issue, env_path: str, example_path: str) -> str:
++def example_lines(example: ParseResult) -> dict[str, int]:
++    """Map each key to the line of its first definition in the example file."""
++    lines: dict[str, int] = {}
++    for entry in example.entries:
++        lines.setdefault(entry.key, entry.line_no)
++    return lines
++
++
++def format_issue(
++    issue: Issue,
++    env_path: str,
++    example_path: str,
++    example_line_nos: dict[str, int] | None = None,
++) -> str:
+     path = env_path if issue.source == "env" else example_path
+-    location = f"{path}:{issue.line_no}" if issue.line_no is not None else path
++    line_no = issue.line_no
++    if issue.kind is IssueKind.MISSING and example_line_nos and issue.key in example_line_nos:
++        # A missing key lives only in the example file: point at its definition there.
++        path = example_path
++        line_no = example_line_nos[issue.key]
++    location = f"{path}:{line_no}" if line_no is not None else path
+     subject = f"{issue.key}: " if issue.key else ""
+     return f"{location}: {issue.severity.value}: {subject}{issue.message} [{issue.kind.value}]"
+ 
+ 
+-def format_check(issues: list[Issue], env_path: str, example_path: str) -> list[str]:
++def format_check(
++    issues: list[Issue],
++    env_path: str,
++    example_path: str,
++    example_line_nos: dict[str, int] | None = None,
++) -> list[str]:
+     if not issues:
+         return [f"OK: {env_path} matches {example_path}"]
+-    lines = [format_issue(i, env_path, example_path) for i in issues]
++    lines = [format_issue(i, env_path, example_path, example_line_nos) for i in issues]
+     errors = sum(1 for i in issues if i.severity is Severity.ERROR)
+     warnings = len(issues) - errors
+     lines.append(f"{errors} error(s), {warnings} warning(s)")
+@@ -31,3 +54,8 @@ def format_diff(result: DiffResult) -> list[str]:
+         + [f"- {k} removed" for k in result.removed]
+         + [f"~ {k} changed" for k in result.changed]
+     )
++
++
++def format_diff_warnings(errors: list[ParseError], path: str) -> list[str]:
++    """One warning per malformed line: path and line number only, never content."""
++    return [f"envguard: warning: {path}:{err.line_no}: malformed line, ignored" for err in errors]
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 3343b89..316b730 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -91,9 +91,10 @@ def test_diff_reports_keys_only(write, capsys):
+ def test_diff_identical_exits_zero(write, capsys):
+     a = write("a.env", "A=1\n")
+     b = write("b.env", "A=1\n")
+-    code, out, _ = run(capsys, "diff", a, b)
++    code, out, err = run(capsys, "diff", a, b)
+     assert code == 0
+     assert out.strip() == "no differences"
++    assert err == ""
+ 
+ 
+ def test_diff_missing_file_exits_two(write, tmp_path, capsys):
+diff --git a/tests/test_cli_locations.py b/tests/test_cli_locations.py
+new file mode 100644
+index 0000000..9bb32aa
+--- /dev/null
++++ b/tests/test_cli_locations.py
+@@ -0,0 +1,74 @@
++"""CLI tests for issue #3: diff warns about malformed lines, missing points at the example line."""
++
++import pytest
++
++from envguard.cli.main import main
++
++
++@pytest.fixture
++def write(tmp_path):
++    def _write(name: str, text: str) -> str:
++        path = tmp_path / name
++        path.write_text(text, encoding="utf-8")
++        return str(path)
++
++    return _write
++
++
++def run(capsys, *argv):
++    code = main(list(argv))
++    out, err = capsys.readouterr()
++    return code, out, err
++
++
++def test_check_missing_key_points_at_example_line(write, capsys):
++    env = write(".env", "A=1\n")
++    example = write(".env.example", "A=\n# comment\nB=\n")
++    code, out, _ = run(capsys, "check", "--env", env, "--example", example)
++    assert code == 1
++    missing = [line for line in out.splitlines() if "[missing]" in line]
++    assert missing == [f"{example}:3: error: B: missing from env file [missing]"]
++    assert missing[0].startswith(f"{example}:3:")
++
++
++def test_check_missing_key_points_at_first_example_definition(write, capsys):
++    env = write(".env", "A=1\n")
++    example = write(".env.example", "A=\nB=\nB=\n")
++    code, out, _ = run(capsys, "check", "--env", env, "--example", example)
++    assert code == 1
++    missing = [line for line in out.splitlines() if "[missing]" in line]
++    assert missing == [f"{example}:2: error: B: missing from env file [missing]"]
++
++
++def test_diff_well_formed_files_have_empty_stderr(write, capsys):
++    a = write("a.env", "A=1\nB=2\n")
++    b = write("b.env", "A=1\nC=3\n")
++    code, _, err = run(capsys, "diff", a, b)
++    assert code == 1
++    assert err == ""
++
++
++def test_diff_warns_about_malformed_line_without_content(write, capsys):
++    a = write("a.env", "A=1\nbroken s3cret-line\n")
++    b = write("b.env", "A=1\n")
++    code, out, err = run(capsys, "diff", a, b)
++    assert code == 0
++    assert out.strip() == "no differences"
++    assert f"{a}:2" in err
++    assert "s3cret" not in err
++    assert "broken" not in err
++
++
++def test_diff_warns_once_per_malformed_line_in_both_files(write, capsys):
++    a = write("a.env", "bad-old-1\nA=1\nbad-old-2\n")
++    b = write("b.env", "A=1\nbad-new-1\n")
++    code, out, err = run(capsys, "diff", a, b)
++    assert code == 0
++    assert out.strip() == "no differences"
++    warnings = err.splitlines()
++    assert len(warnings) == 3
++    assert warnings[0].startswith("envguard: ")
++    assert f"{a}:1:" in warnings[0]
++    assert f"{a}:3:" in warnings[1]
++    assert f"{b}:2:" in warnings[2]
++    assert "bad-" not in err
+diff --git a/tests/test_output.py b/tests/test_output.py
+new file mode 100644
+index 0000000..f33f5f8
+--- /dev/null
++++ b/tests/test_output.py
+@@ -0,0 +1,30 @@
++from envguard.cli.output import example_lines, format_check, format_diff_warnings
++from envguard.core.checks import check_env
++from envguard.core.models import ParseError
++from envguard.core.parser import parse
++
++
++def test_example_lines_uses_first_definition():
++    assert example_lines(parse("A=\n# note\nB=\nB=\n")) == {"A": 1, "B": 3}
++
++
++def test_missing_issue_points_at_example_line():
++    example = parse("A=\n# note\nB=\n")
++    issues = check_env(parse("A=1\n"), example)
++    lines = format_check(issues, ".env", ".env.example", example_lines(example))
++    assert lines[0] == ".env.example:3: error: B: missing from env file [missing]"
++
++
++def test_other_issue_locations_are_unchanged():
++    example = parse("A=\n")
++    issues = check_env(parse("A=1\nZ=9\n"), example)
++    lines = format_check(issues, ".env", ".env.example", example_lines(example))
++    assert lines[0] == ".env:2: warning: Z: not listed in example file [extra]"
++
++
++def test_diff_warnings_name_path_and_line_only():
++    warnings = format_diff_warnings([ParseError(2, "detail"), ParseError(5, "x")], "old.env")
++    assert warnings == [
++        "envguard: warning: old.env:2: malformed line, ignored",
++        "envguard: warning: old.env:5: malformed line, ignored",
++    ]
