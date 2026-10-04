@@ -1,0 +1,158 @@
+# NIST SP 800-218 — Secure Software Development Framework (SSDF) v1.1
+# Cadence mapping of practices to artifacts that support compliance.
+#
+# Cited per the SSDF v1.1 final (February 2022) practice catalog.
+# https://csrc.nist.gov/publications/detail/sp/800-218/final
+#
+# Status meanings:
+#   - implemented: artifact exists AND verify pipeline confirms its gate
+#   - partial: artifact exists, no verify evidence
+#   - gap: no artifact found
+#   - n/a: explicitly marked not applicable in cadence.yaml
+
+standard:
+  id: nist-ssdf
+  version: "1.1"
+  url: https://csrc.nist.gov/publications/detail/sp/800-218/final
+  authority: "U.S. National Institute of Standards and Technology"
+  reference_implementation_status: "Phase 1 — opinionated mapping; not formal certification"
+
+practices:
+
+  # ─────────────────────────────────────────────────────────────────
+  # Prepare the Organization (PO)
+  # ─────────────────────────────────────────────────────────────────
+
+  - id: PO.1
+    name: Define security requirements for software development
+    cadence_artifacts:
+      - path: "docs/PATTERNS.md"
+        anchor: security
+      - glob: "docs/ADR/*-security-*.md"
+      - glob: "docs/ADR/*-secret-*.md"
+    cadence_artifacts_via_frontmatter:
+      - tag: "ssdf: [PO.1]"
+
+  - id: PO.2
+    name: Implement roles and responsibilities
+    cadence_artifacts:
+      - path: "docs/ROLE_SPECS.md"
+      - path: "docs/TEAM_PROTOCOL.md"
+
+  - id: PO.3
+    name: Implement supporting toolchains
+    cadence_artifacts:
+      - path: ".cadence/cadence.yaml"
+      - path: "scripts/verify.sh"
+      - path: "scripts/verify.ps1"
+
+  - id: PO.4
+    name: Define and use criteria for software security checks
+    cadence_artifacts:
+      - path: "docs/DEFINITION_OF_DONE.md"
+      - path: ".cadence/cadence.yaml"
+        anchor: commands.lint
+
+  - id: PO.5
+    name: Implement and maintain secure environments for software development
+    cadence_artifacts:
+      - path: ".github/workflows/cadence.yml"
+      - path: ".github/dependabot.yml"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Protect the Software (PS)
+  # ─────────────────────────────────────────────────────────────────
+
+  - id: PS.1
+    name: Protect all forms of code from unauthorized access and tampering
+    cadence_artifacts: []
+    notes: "Out of Cadence scope. Use Git access controls + branch protection."
+
+  - id: PS.2
+    name: Provide a mechanism for verifying software release integrity
+    cadence_artifacts: []
+    notes: "Phase 3 work — SLSA provenance generation."
+
+  - id: PS.3
+    name: Archive and protect each software release
+    cadence_artifacts: []
+    notes: "Out of Cadence scope. Use Git tags + GitHub Releases."
+
+  # ─────────────────────────────────────────────────────────────────
+  # Produce Well-Secured Software (PW)
+  # ─────────────────────────────────────────────────────────────────
+
+  - id: PW.1
+    name: Design software to meet security requirements and mitigate security risks
+    cadence_artifacts:
+      - glob: "docs/ADR/*.md"
+      - path: "docs/PATTERNS.md"
+
+  - id: PW.2
+    name: Review the software design to verify compliance with security requirements
+    cadence_artifacts:
+      - path: "agents/cadence-reviewer.md"
+      - path: "docs/DEFINITION_OF_DONE.md"
+
+  - id: PW.4
+    name: Reuse existing, well-secured software when feasible
+    cadence_artifacts:
+      - glob: "docs/ADR/*-dependency-*.md"
+      - glob: "docs/ADR/*-third-party-*.md"
+
+  - id: PW.5
+    name: Create source code by adhering to secure coding practices
+    cadence_artifacts:
+      - path: "docs/PATTERNS.md"
+      - path: ".cadence/cadence.yaml"
+        anchor: commands.lint
+      - path: "tool/check_boundaries.py"
+
+  - id: PW.6
+    name: Configure the compilation, interpreter, and build processes
+    cadence_artifacts:
+      - path: ".cadence/cadence.yaml"
+      - path: "scripts/verify.sh"
+
+  - id: PW.7
+    name: Review and/or analyze human-readable code to identify vulnerabilities
+    cadence_artifacts:
+      - path: "agents/cadence-reviewer.md"
+      - path: "docs/DEFINITION_OF_DONE.md"
+      - path: ".cadence/cadence.yaml"
+        anchor: commands.lint
+      - path: "tool/check_boundaries.py"
+
+  - id: PW.8
+    name: Test executable code to identify vulnerabilities
+    cadence_artifacts:
+      - glob: "tests/**"
+      - path: ".cadence/cadence.yaml"
+        anchor: commands.test
+
+  - id: PW.9
+    name: Configure software to have secure settings by default
+    cadence_artifacts: []
+    notes: "Application-level; Cadence does not enforce."
+
+  # ─────────────────────────────────────────────────────────────────
+  # Respond to Vulnerabilities (RV)
+  # ─────────────────────────────────────────────────────────────────
+
+  - id: RV.1
+    name: Identify and confirm vulnerabilities on an ongoing basis
+    cadence_artifacts:
+      - path: ".github/dependabot.yml"
+      - path: ".github/workflows/cadence.yml"
+
+  - id: RV.2
+    name: Assess, prioritize, and remediate vulnerabilities
+    cadence_artifacts:
+      - path: "docs/RETROSPECTIVE_PROTOCOL.md"
+      - path: "docs/FRAMEWORK_CHANGELOG.md"
+
+  - id: RV.3
+    name: Analyze vulnerabilities to identify their root causes
+    cadence_artifacts:
+      - path: "docs/RETROSPECTIVE_PROTOCOL.md"
+      - path: "docs/FRAMEWORK_CHANGELOG.md"

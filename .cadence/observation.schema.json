@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nik190799.github.io/cadence/schemas/observation.schema.json",
+  "title": "Cadence factory observation",
+  "description": "What tool/signals.py observe recorded about one build attempt: ids, results and evidence (changed files, added import edges, guarded-path operations, boundary-rule hits, failing tests), never verdicts. Stored on the cadence/state branch as observations/<run_id>-<run_attempt>.json. Metrics recompute mistake classes from this evidence; see docs/LEARNING.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "repo",
+    "issue",
+    "run_id",
+    "run_attempt",
+    "base_sha",
+    "completed_at",
+    "patch_sha256",
+    "patch_bytes",
+    "apply_status",
+    "agent_result",
+    "agent_subtype",
+    "verify_result",
+    "gate_step",
+    "published",
+    "pr",
+    "published_sha",
+    "detector_version",
+    "ruleset_sha256",
+    "config_sha256",
+    "area_depth",
+    "evidence",
+    "classes",
+    "truncated"
+  ],
+  "properties": {
+    "schema": { "const": "cadence.observation/1" },
+    "repo": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$" },
+    "issue": { "type": "integer", "minimum": 1 },
+    "run_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "run_attempt": { "type": "integer", "minimum": 1 },
+    "base_sha": { "$ref": "#/$defs/sha40" },
+    "completed_at": { "$ref": "#/$defs/ts" },
+    "patch_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of the agent's change.patch; null when it is missing or empty."
+    },
+    "patch_bytes": { "type": "integer", "minimum": 0 },
+    "apply_status": {
+      "type": "string",
+      "enum": ["ok", "failed", "empty", "missing"],
+      "description": "Whether the patch applied to the base commit. Only 'ok' attempts carry evidence."
+    },
+    "agent_result": { "type": "string", "enum": ["success", "failure", "cancelled", "skipped"] },
+    "agent_subtype": {
+      "enum": ["success", "error_max_turns", "error_max_budget_usd", "error_during_execution", "other", null]
+    },
+    "verify_result": { "type": "string", "enum": ["success", "failure", "cancelled", "skipped"] },
+    "gate_step": {
+      "type": "string",
+      "enum": ["none", "format", "lint", "boundaries", "test", "apply", "empty", "policy", "timeout", "unknown"]
+    },
+    "published": { "type": "boolean" },
+    "pr": { "type": ["integer", "null"], "minimum": 1 },
+    "published_sha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+    "detector_version": {
+      "$ref": "#/$defs/sha256",
+      "description": "sha256 of the bytes of tool/signals.py followed by tool/check_boundaries.py."
+    },
+    "ruleset_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of the base .cadence/cadence.yaml; null when it does not exist."
+    },
+    "config_sha256": {
+      "$ref": "#/$defs/sha256",
+      "description": "sha256 of the canonical JSON of the effective learning config."
+    },
+    "area_depth": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "import_edges", "guarded", "rule_hits", "failing_tests"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "op", "area", "test", "source"],
+            "properties": {
+              "path": { "$ref": "#/$defs/anyPath" },
+              "op": { "type": "string", "enum": ["A", "M", "D"] },
+              "area": { "type": ["string", "null"], "maxLength": 130 },
+              "test": { "type": "boolean" },
+              "source": { "type": "boolean" }
+            }
+          }
+        },
+        "import_edges": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "line_no", "from_area", "to", "kind", "key", "line", "line_sha256"],
+            "properties": {
+              "path": { "$ref": "#/$defs/safePath" },
+              "line_no": { "type": "integer", "minimum": 1 },
+              "from_area": { "type": "string", "minLength": 1, "maxLength": 130 },
+              "to": { "type": "string", "minLength": 1, "maxLength": 140 },
+              "kind": { "type": "string", "enum": ["relative", "package", "python", "dart"] },
+              "key": { "$ref": "#/$defs/classKey" },
+              "line": {
+                "type": ["string", "null"],
+                "maxLength": 200,
+                "description": "The added line, kept only when it fullmatches the strict import-line pattern of its language."
+              },
+              "line_sha256": { "$ref": "#/$defs/sha256" }
+            }
+          }
+        },
+        "guarded": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["root", "op", "path"],
+            "properties": {
+              "root": {
+                "type": "string",
+                "pattern": "^(?!(?:[^/]*/)*\\.{1,2}(?:/|$))[A-Za-z0-9_.-]{1,64}(?:/[A-Za-z0-9_.-]{1,64}){0,5}$",
+                "description": "The deepest guarded path or test root that holds the file: a relative directory path of 1 to 6 segments, none of them . or .. (learning.guarded_paths, learning.test_roots)."
+              },
+              "op": { "type": "string", "enum": ["add", "modify", "delete"] },
+              "path": { "$ref": "#/$defs/anyPath" }
+            }
+          }
+        },
+        "rule_hits": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rule_id", "path", "line_no", "forbidden", "key"],
+            "properties": {
+              "rule_id": { "type": "string", "pattern": "^[LB]-[0-9a-f]{8}$" },
+              "path": { "$ref": "#/$defs/safePath" },
+              "line_no": { "type": "integer", "minimum": 1 },
+              "forbidden": { "type": "string", "minLength": 1, "maxLength": 200 },
+              "key": {
+                "anyOf": [{ "$ref": "#/$defs/classKey" }, { "type": "null" }]
+              }
+            }
+          }
+        },
+        "failing_tests": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path"],
+            "properties": {
+              "path": { "$ref": "#/$defs/safePath" }
+            }
+          }
+        }
+      }
+    },
+    "classes": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 100,
+      "description": "Classes observe derives on its own: guarded, missing-test, test, gate and agent. Import edges are recomputed from evidence by the ladder and metrics, because they count only once seeded.",
+      "items": {
+        "type": "string",
+        "maxLength": 200,
+        "pattern": "^(guarded|missing-test|test|gate|agent):[A-Za-z0-9_./@+:>-]{1,180}$"
+      }
+    },
+    "lessons_cited": {
+      "type": ["array", "null"],
+      "uniqueItems": true,
+      "maxItems": 200,
+      "items": { "type": "string", "pattern": "^L-[0-9a-f]{8}$" },
+      "description": "Optional; observations from before 2026-10-02 have none. The sorted lesson ids that the approved spec the build used names as exact tokens and that are active lessons (rung pattern or check) in the base commit's .cadence/lessons.yaml; ids in the spec that are not active lessons there are dropped. [] when the spec cites none; null (unknown) when the spec or the base lessons could not be read, or the spec's sha256 is not the one the gate recorded. Informational only: no repeat, escape or kill-criterion number reads it (docs/LEARNING.md)."
+    },
+    "truncated": {
+      "type": "boolean",
+      "description": "True when an evidence list hit its cap or a file was too large to read."
+    }
+  },
+  "$defs": {
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "classKey": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^(import-edge|guarded|missing-test|test|edit|review|gate|agent|pr):[A-Za-z0-9_./@+:>-]{1,180}$"
+    },
+    "safePath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.@+/-]{1,300}$",
+      "description": "A repo-relative path restricted to characters that are safe in class keys, fixtures and shell arguments."
+    },
+    "anyPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$",
+      "description": "A repo-relative path as git reports it; no control characters."
+    }
+  }
+}

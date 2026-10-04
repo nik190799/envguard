@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nik190799.github.io/cadence/schemas/metrics.schema.json",
+  "title": "Cadence learning metrics report",
+  "description": "Output of tool/metrics.py report: repeat rate, escape rate and the kill-criterion numbers, recomputed from the evidence on cadence/state with one detector set (docs/LEARNING.md, Metrics). Counts only; no text from agents or humans.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "generated_at",
+    "repo",
+    "detector_set",
+    "metrics_code_sha256",
+    "order",
+    "window",
+    "since",
+    "completeness",
+    "attempts",
+    "repeat",
+    "escape",
+    "by_family",
+    "post_pr",
+    "new_class_rate",
+    "learned_check_catches",
+    "post_promotion_exposed_no_repeat",
+    "first_pass_verify",
+    "test_tampering_rate",
+    "merge_rate_30d",
+    "cost",
+    "by_class",
+    "judge_shadow",
+    "unreadable"
+  ],
+  "properties": {
+    "schema": { "const": "cadence.metrics/1" },
+    "generated_at": { "$ref": "#/$defs/ts" },
+    "repo": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$"
+    },
+    "detector_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "sha256"],
+      "properties": {
+        "kind": { "enum": ["current", "union", "file"] },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "metrics_code_sha256": { "$ref": "#/$defs/sha256" },
+    "order": { "enum": ["time", "issue"] },
+    "window": { "type": "integer", "minimum": 0 },
+    "since": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/ts" }]
+    },
+    "completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build_runs", "observed", "ratio"],
+      "properties": {
+        "build_runs": { "$ref": "#/$defs/count" },
+        "observed": { "$ref": "#/$defs/count" },
+        "ratio": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "attempts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scored", "ops", "deduped"],
+      "properties": {
+        "scored": { "$ref": "#/$defs/count" },
+        "ops": { "$ref": "#/$defs/count" },
+        "deduped": { "$ref": "#/$defs/count" }
+      }
+    },
+    "repeat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["opportunities", "repeats", "rate", "ci95", "status"],
+      "properties": {
+        "opportunities": { "$ref": "#/$defs/count" },
+        "repeats": { "$ref": "#/$defs/count" },
+        "rate": { "$ref": "#/$defs/rate" },
+        "ci95": { "$ref": "#/$defs/interval" },
+        "status": { "enum": ["ok", "insufficient", "incomplete"] }
+      }
+    },
+    "escape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["escapes", "rate", "share", "per_10_attempts", "ci95"],
+      "properties": {
+        "escapes": { "$ref": "#/$defs/count" },
+        "rate": { "$ref": "#/$defs/rate" },
+        "share": { "$ref": "#/$defs/rate" },
+        "per_10_attempts": { "$ref": "#/$defs/number" },
+        "ci95": { "$ref": "#/$defs/interval" }
+      }
+    },
+    "by_family": {
+      "type": "object",
+      "propertyNames": {
+        "enum": ["import-edge", "guarded", "missing-test", "test"]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["opportunities", "repeats", "escapes", "rr", "er"],
+        "properties": {
+          "opportunities": { "$ref": "#/$defs/count" },
+          "repeats": { "$ref": "#/$defs/count" },
+          "escapes": { "$ref": "#/$defs/count" },
+          "rr": { "$ref": "#/$defs/rate" },
+          "er": { "$ref": "#/$defs/rate" }
+        }
+      }
+    },
+    "post_pr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prs_harvested", "opportunities", "repeats", "rate"],
+      "properties": {
+        "prs_harvested": { "$ref": "#/$defs/count" },
+        "opportunities": { "$ref": "#/$defs/count" },
+        "repeats": { "$ref": "#/$defs/count" },
+        "rate": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "new_class_rate": { "$ref": "#/$defs/number" },
+    "learned_check_catches": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "by_lesson"],
+      "properties": {
+        "count": { "$ref": "#/$defs/count" },
+        "by_lesson": {
+          "type": "object",
+          "propertyNames": { "pattern": "^L-[0-9a-f]{8}$" },
+          "additionalProperties": { "$ref": "#/$defs/count" }
+        }
+      }
+    },
+    "post_promotion_exposed_no_repeat": { "$ref": "#/$defs/count" },
+    "lessons_cited": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempts_with_citation", "attempts_unknown", "cited_and_absent", "cited_and_present"],
+      "description": "Informational, optional (reports from before 2026-10-02 have none); no other number reads it. Over the scored attempts: how many recorded a spec that cited at least one active lesson, how many are unknown (lessons_cited null or not recorded; never counted as absent), and per cited lesson whether its class was absent from or present in the attempt's classes. Absent is not prevention; the rules-on vs rules-frozen eval measures that (docs/LEARNING.md).",
+      "properties": {
+        "attempts_with_citation": { "$ref": "#/$defs/count" },
+        "attempts_unknown": { "$ref": "#/$defs/count" },
+        "cited_and_absent": { "$ref": "#/$defs/lessonCounts" },
+        "cited_and_present": { "$ref": "#/$defs/lessonCounts" }
+      }
+    },
+    "first_pass_verify": { "$ref": "#/$defs/rate" },
+    "test_tampering_rate": { "$ref": "#/$defs/rate" },
+    "merge_rate_30d": { "$ref": "#/$defs/rate" },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["per_attempt_median", "per_attempt_mean", "per_merged_pr"],
+      "properties": {
+        "per_attempt_median": { "$ref": "#/$defs/number" },
+        "per_attempt_mean": { "$ref": "#/$defs/number" },
+        "per_merged_pr": { "$ref": "#/$defs/number" }
+      }
+    },
+    "by_class": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "rung", "issues", "occurrences", "escaped", "last_seen"],
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^(import-edge|guarded|missing-test|test|edit|review|gate|agent|pr):[A-Za-z0-9_./@+:>-]{1,180}$"
+          },
+          "rung": { "enum": ["note", "pattern", "check", "retired", "suppressed"] },
+          "issues": { "$ref": "#/$defs/count" },
+          "occurrences": { "$ref": "#/$defs/count" },
+          "escaped": { "$ref": "#/$defs/count" },
+          "last_seen": { "$ref": "#/$defs/ts" }
+        }
+      }
+    },
+    "judge_shadow": { "type": ["object", "null"] },
+    "unreadable": { "$ref": "#/$defs/count" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "count": { "type": "integer", "minimum": 0 },
+    "lessonCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "by_lesson"],
+      "properties": {
+        "count": { "$ref": "#/$defs/count" },
+        "by_lesson": {
+          "type": "object",
+          "propertyNames": { "pattern": "^L-[0-9a-f]{8}$" },
+          "additionalProperties": { "$ref": "#/$defs/count" }
+        }
+      }
+    },
+    "number": { "type": ["number", "null"], "minimum": 0 },
+    "rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "interval": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      ]
+    }
+  }
+}

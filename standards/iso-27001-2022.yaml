@@ -1,0 +1,75 @@
+# ISO/IEC 27001:2022 — Information Security, Cybersecurity and Privacy
+# Protection — Information Security Management Systems — Requirements
+# https://www.iso.org/standard/27001
+#
+# This is a STUB. Annex A of ISO 27001:2022 enumerates 93 controls
+# organised into four themes:
+#
+#   A.5  Organizational controls   (37 controls)
+#   A.6  People controls            (8 controls)
+#   A.7  Physical controls         (14 controls)
+#   A.8  Technological controls    (34 controls)
+#
+# Mapping individual Annex A controls to Cadence artifacts requires
+# input from an ISO 27001 lead auditor — most controls concern policies
+# and procedures that live in an ISMS, not a development framework.
+# Some technological controls (A.8 series) have natural Cadence anchors
+# (secure coding, change management, vulnerability handling) and will
+# be the first to mature in Phase 3.
+#
+# DO NOT cite the stub as evidence of ISO 27001 readiness. It is a
+# roadmap, not a compliance claim.
+
+standard:
+  id: iso-27001
+  version: "2022"
+  url: https://www.iso.org/standard/27001
+  authority: "International Organization for Standardization"
+  reference_implementation_status: "stub — auditor input required for real mapping"
+
+# Annex A themes, stubbed at the theme level. Individual controls
+# (e.g. A.5.1, A.8.28) are intentionally not enumerated — see header.
+annex_a_themes:
+
+  - id: A.5
+    name: Organizational controls
+    control_count: 37
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Predominantly policy and governance — outside framework scope.
+      Cadence's ROLE_SPECS.md and TEAM_PROTOCOL.md may map to a handful
+      (e.g. A.5.2 Information security roles and responsibilities).
+
+  - id: A.6
+    name: People controls
+    control_count: 8
+    status: out-of-scope
+    cadence_artifacts: []
+    notes: |
+      HR concerns — screening, training, disciplinary process. Cadence
+      does not address these.
+
+  - id: A.7
+    name: Physical controls
+    control_count: 14
+    status: out-of-scope
+    cadence_artifacts: []
+    notes: |
+      Facility and equipment concerns. Cadence does not address these.
+
+  - id: A.8
+    name: Technological controls
+    control_count: 34
+    status: planned
+    cadence_artifacts: []
+    notes: |
+      Highest-value mapping target. Controls like A.8.25 (Secure
+      development life cycle), A.8.27 (Secure system architecture and
+      engineering principles), A.8.28 (Secure coding), A.8.29 (Security
+      testing in development and acceptance), A.8.31 (Separation of
+      development, test and production environments), and A.8.32 (Change
+      management) all have natural Cadence anchors: PATTERNS.md, ADRs,
+      DoD checklist, verify pipeline, boundary checker, retrospective.
+      Real mapping requires per-control evidence selection with an
+      auditor.
