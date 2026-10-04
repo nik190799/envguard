@@ -1,0 +1,102 @@
+{
+  "schema": "cadence.metrics/1",
+  "generated_at": "2026-10-04T04:17:43Z",
+  "repo": "nik190799/envguard",
+  "detector_set": {
+    "kind": "current",
+    "sha256": "24d191e0388b190a2b41783769d54886eef37560770f2a97cc3114076dd9c4d2"
+  },
+  "metrics_code_sha256": "c6f8d0a413c7a58714fc68cf891d723cda39ebbe74dac0f1c8ee1690cd884904",
+  "order": "time",
+  "window": 10,
+  "since": null,
+  "completeness": {
+    "build_runs": 0,
+    "observed": 0,
+    "ratio": 1.0
+  },
+  "attempts": {
+    "scored": 0,
+    "ops": 0,
+    "deduped": 0
+  },
+  "repeat": {
+    "opportunities": 0,
+    "repeats": 0,
+    "rate": null,
+    "ci95": null,
+    "status": "insufficient"
+  },
+  "escape": {
+    "escapes": 0,
+    "rate": null,
+    "share": null,
+    "per_10_attempts": null,
+    "ci95": null
+  },
+  "by_family": {
+    "import-edge": {
+      "opportunities": 0,
+      "repeats": 0,
+      "escapes": 0,
+      "rr": null,
+      "er": null
+    },
+    "guarded": {
+      "opportunities": 0,
+      "repeats": 0,
+      "escapes": 0,
+      "rr": null,
+      "er": null
+    },
+    "missing-test": {
+      "opportunities": 0,
+      "repeats": 0,
+      "escapes": 0,
+      "rr": null,
+      "er": null
+    },
+    "test": {
+      "opportunities": 0,
+      "repeats": 0,
+      "escapes": 0,
+      "rr": null,
+      "er": null
+    }
+  },
+  "post_pr": {
+    "prs_harvested": 0,
+    "opportunities": 0,
+    "repeats": 0,
+    "rate": null
+  },
+  "new_class_rate": null,
+  "learned_check_catches": {
+    "count": 0,
+    "by_lesson": {}
+  },
+  "post_promotion_exposed_no_repeat": 0,
+  "lessons_cited": {
+    "attempts_with_citation": 0,
+    "attempts_unknown": 0,
+    "cited_and_absent": {
+      "count": 0,
+      "by_lesson": {}
+    },
+    "cited_and_present": {
+      "count": 0,
+      "by_lesson": {}
+    }
+  },
+  "first_pass_verify": null,
+  "test_tampering_rate": null,
+  "merge_rate_30d": null,
+  "cost": {
+    "per_attempt_median": null,
+    "per_attempt_mean": null,
+    "per_merged_pr": null
+  },
+  "by_class": [],
+  "judge_shadow": null,
+  "unreadable": 0
+}
