@@ -17,7 +17,8 @@ import re
 from envguard.core.models import Entry, ParseError, ParseResult
 
 KEY_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-_EXPORT_PREFIX = "export "
+# ``export`` plus any whitespace, unless what follows is ``=`` (a key named ``export``).
+_EXPORT_PREFIX_RE = re.compile(r"^export\s+(?=[^=\s])")
 _DOUBLE_QUOTE_ESCAPES = {'"': '"', "\\": "\\", "n": "\n"}
 
 
@@ -41,9 +42,10 @@ def parse(text: str) -> ParseResult:
 
 def _parse_line(line: str, line_no: int) -> Entry:
     exported = False
-    if line.startswith(_EXPORT_PREFIX):
+    prefix = _EXPORT_PREFIX_RE.match(line)
+    if prefix:
         exported = True
-        line = line[len(_EXPORT_PREFIX) :].lstrip()
+        line = line[prefix.end() :]
 
     key, sep, rest = line.partition("=")
     if not sep:

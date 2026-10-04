@@ -27,6 +27,32 @@ def test_export_prefix():
     assert entry.exported is True
 
 
+def test_export_prefix_followed_by_tab():
+    entry = only_entry("export\tKEY=value")
+    assert (entry.key, entry.value, entry.exported) == ("KEY", "value", True)
+
+
+def test_export_prefix_followed_by_several_spaces():
+    entry = only_entry("export    KEY=value")
+    assert (entry.key, entry.value, entry.exported) == ("KEY", "value", True)
+
+
+def test_key_named_export_is_not_a_prefix():
+    entry = only_entry("export=1")
+    assert (entry.key, entry.value, entry.exported) == ("export", "1", False)
+
+
+def test_key_named_export_with_space_before_equals():
+    entry = only_entry("export =1")
+    assert (entry.key, entry.value, entry.exported) == ("export", "1", False)
+
+
+def test_export_without_equals_is_an_error():
+    result = parse("export KEY")
+    assert result.entries == []
+    assert [e.message for e in result.errors] == ["expected KEY=VALUE"]
+
+
 def test_whitespace_around_equals_is_trimmed():
     entry = only_entry("  KEY  =  spaced value  ")
     assert entry.key == "KEY"
