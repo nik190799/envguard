@@ -41,7 +41,7 @@ LOG_LEVEL=info
 Example output:
 
 ```text
-.env: error: DATABASE_URL: missing from env file [missing]
+.env.example:1: error: DATABASE_URL: missing from env file [missing]
 .env:4: warning: OLD_FLAG: not listed in example file [extra]
 1 error(s), 1 warning(s)
 ```
@@ -59,6 +59,13 @@ envguard diff .env.staging .env.prod
 ```
 
 Only key names are shown. A changed value is reported as `changed`, never printed.
+
+A line in either file that cannot be parsed is ignored by the comparison, with one
+warning per line on stderr naming only the file and line number:
+
+```text
+envguard: warning: .env.prod:7: malformed line, ignored
+```
 
 ### Exit codes
 

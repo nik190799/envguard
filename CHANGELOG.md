@@ -6,6 +6,13 @@ and this project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `envguard diff` now writes one warning per malformed line to stderr, naming only the file
+  and line number, instead of dropping the line silently.
+- `envguard check` reports a `missing` key at the line where it is defined in the example file
+  (for example `.env.example:3`) instead of just the env file path.
+
 ## [0.1.0] - 2026-10-03
 
 ### Added
