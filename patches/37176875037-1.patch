@@ -1,0 +1,60 @@
+diff --git a/src/envguard/io/reader.py b/src/envguard/io/reader.py
+index 07171ac..92b9be5 100644
+--- a/src/envguard/io/reader.py
++++ b/src/envguard/io/reader.py
+@@ -17,7 +17,8 @@ def read_text(path: str | Path) -> str:
+     if p.is_dir():
+         raise EnvFileError(f"not a file: {p}")
+     try:
+-        return p.read_text(encoding="utf-8")
++        # utf-8-sig drops one leading byte order mark, as saved by some Windows editors.
++        return p.read_text(encoding="utf-8-sig")
+     except FileNotFoundError:
+         raise EnvFileError(f"file not found: {p}") from None
+     except UnicodeDecodeError:
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index 140a5da..3343b89 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -27,6 +27,14 @@ def test_check_clean_exits_zero(write, capsys):
+     assert out.startswith("OK:")
+ 
+ 
++def test_check_bom_prefixed_files_exit_zero(write, capsys):
++    env = write(".env", "﻿A=1\n")
++    example = write(".env.example", "﻿A=\n")
++    code, out, _ = run(capsys, "check", "--env", env, "--example", example)
++    assert code == 0
++    assert out.startswith("OK:")
++
++
+ def test_check_missing_key_exits_one(write, capsys):
+     env = write(".env", "A=1\n")
+     example = write(".env.example", "A=\nB=\n")
+diff --git a/tests/test_io.py b/tests/test_io.py
+index 4a8245a..39d4eca 100644
+--- a/tests/test_io.py
++++ b/tests/test_io.py
+@@ -9,6 +9,22 @@ def test_load_env_parses_file(tmp_path):
+     assert load_env(path).distinct_keys() == ["A", "B"]
+ 
+ 
++def test_leading_bom_is_ignored(tmp_path):
++    path = tmp_path / ".env"
++    path.write_bytes(b"\xef\xbb\xbfA=1\n")
++    result = load_env(path)
++    assert result.errors == []
++    assert len(result.entries) == 1
++    entry = result.entries[0]
++    assert (entry.key, entry.value, entry.line_no) == ("A", "1", 1)
++
++
++def test_only_one_leading_bom_is_removed(tmp_path):
++    path = tmp_path / ".env"
++    path.write_bytes(b"\xef\xbb\xbf\xef\xbb\xbfA=1\n")
++    assert read_text(path) == "﻿A=1\n"
++
++
+ def test_missing_file_raises(tmp_path):
+     with pytest.raises(EnvFileError, match="file not found"):
+         read_text(tmp_path / "nope.env")
