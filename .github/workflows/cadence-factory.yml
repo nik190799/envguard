@@ -108,8 +108,11 @@ on:
         required: true
         type: choice
         options: [spec, build, reconcile, learn]
-  schedule:
-    - cron: "17 * * * *" # hourly, off the hour: the reconciler, then the learn chain when due
+  # The hourly schedule (cron "17 * * * *") is off to save GitHub Actions
+  # minutes. Run the reconciler / learn chain by hand with workflow_dispatch
+  # (stage=reconcile or stage=learn). To turn it back on, restore:
+  # schedule:
+  #   - cron: "17 * * * *"
 # No push trigger, ever. Claims (cadence/claim/N), work branches
 # (cadence/issue-N), the ledger (cadence/state) and the retro branch
 # (cadence/retro) are all pushes. No pull_request, pull_request_target or
